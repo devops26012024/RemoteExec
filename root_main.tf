@@ -16,7 +16,7 @@ resource "aws_key_pair" "key" {
 
 # Security Group
 resource "aws_security_group" "web_sg" {
-  name_prefix = "web-sg"
+  name_prefix = "web-sg-"
 
   ingress {
     from_port   = 22
