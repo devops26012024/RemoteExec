@@ -15,6 +15,12 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Generate SSH Key
+      run: |
+        ssh-keygen -t rsa -b 2048 -f id_rsa -N ""
+        echo "::set-output name=public_key::$(cat id_rsa.pub)"
+      id: generate_key      
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
