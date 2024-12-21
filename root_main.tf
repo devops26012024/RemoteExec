@@ -57,8 +57,6 @@ resource "aws_instance" "web_server" {
       user        = "ec2-user"
       private_key = tls_private_key.key_pair.private_key_pem
       host        = self.public_ip
-      wait_for_ssh = true
-      timeout     = "3m"
     }
 
     inline = [
