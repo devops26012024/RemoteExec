@@ -2,10 +2,16 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-# Key Pair
+# Generate SSH Key Pair using Terraform (TLS provider)
+resource "tls_private_key" "key_pair" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+# Create an AWS EC2 key pair using the generated public key
 resource "aws_key_pair" "key" {
   key_name   = "webserver-key"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = tls_private_key.key_pair.public_key_openssh
 }
 
 # Security Group
