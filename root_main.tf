@@ -1,3 +1,4 @@
+# Provider Configuration
 provider "aws" {
   region = var.aws_region
 }
@@ -8,7 +9,7 @@ resource "tls_private_key" "key_pair" {
   rsa_bits  = 2048
 }
 
-# Create an AWS EC2 key pair using the generated public key
+# Create an AWS EC2 Key Pair
 resource "aws_key_pair" "key" {
   key_name   = "webserver-key"
   public_key = tls_private_key.key_pair.public_key_openssh
@@ -22,7 +23,7 @@ resource "aws_security_group" "web_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # For testing; restrict to your IP for production.
   }
 
   ingress {
@@ -50,15 +51,21 @@ resource "aws_instance" "web_server" {
     aws_security_group.web_sg.name
   ]
 
-  # Provisioner to install Nginx
+  # Use a provisioner to wait for SSH to be ready
   provisioner "remote-exec" {
+    inline = [
+      "echo 'Instance is ready for SSH'"
+    ]
     connection {
       type        = "ssh"
       user        = "ec2-user"
       private_key = tls_private_key.key_pair.private_key_pem
       host        = self.public_ip
     }
+  }
 
+  # Install and Configure Nginx
+  provisioner "remote-exec" {
     inline = [
       "sudo yum update -y",
       "sudo amazon-linux-extras enable nginx1",
@@ -66,18 +73,11 @@ resource "aws_instance" "web_server" {
       "sudo systemctl start nginx",
       "sudo systemctl enable nginx"
     ]
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update -y",
-      "sudo apt install nginx -y"
-    ]
     connection {
       type        = "ssh"
       user        = "ec2-user"
       private_key = tls_private_key.key_pair.private_key_pem
-      host        = aws_instance.web_server.public_ip
+      host        = self.public_ip
     }
   }
 
@@ -86,7 +86,7 @@ resource "aws_instance" "web_server" {
   }
 }
 
-# Output
+# Output the Public IP of the Instance
 output "instance_ip" {
   value = aws_instance.web_server.public_ip
 }
