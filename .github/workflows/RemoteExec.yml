@@ -18,8 +18,8 @@ jobs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: arn:aws:iam::970547381233:role/oidc
-        aws-region: ap-south-1
+        role-to-assume: ${{ secret.AWS_ROLE_ARN }}
+        aws-region: var.aws_region
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
