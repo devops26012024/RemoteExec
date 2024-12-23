@@ -1,16 +1,14 @@
 provider "aws" {
-  region = var.aws_region
+  region = "ap-south-1"
 }
 
+# Create a security group
+resource "aws_security_group" "allow_web" {
+  name_prefix = "allow_web"
 
-# Security Group
-resource "aws_security_group" "ec2_sg" {
-  name        = "ec2-security-group"
-  description = "Allow SSH traffic"
-  
   ingress {
-    from_port   = 22
-    to_port     = 22
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -21,59 +19,36 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "EC2SecurityGroup"
-  }
 }
 
-# EC2 Instance
-resource "aws_instance" "ec2" {
-  ami           = var.aws_ami
-  instance_type = var.instance_type
-  security_groups = [aws_security_group.ec2_sg.name]
-
-  tags = {
-    Name    = "MyEC2Instance5"
-    Version = var.version_name
-  }
-}
-  # Use a provisioner to wait for SSH to be ready
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Instance is ready for SSH'"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = aws_security_group.ec2_sg.name
-      host        = self.public_ip
-    }
-  }
-
-  # Install and Configure Nginx
-  provisioner "remote-exec" {
-    inline = [
-      "sudo yum update -y",
-      "sudo amazon-linux-extras enable nginx1",
-      "sudo yum install -y nginx",
-      "sudo systemctl start nginx",
-      "sudo systemctl enable nginx"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = tls_private_key.key_pair.private_key_pem
-      host        = self.public_ip
-    }
-  }
-
+# Provision an EC2 instance
+resource "aws_instance" "web_server" {
+  ami           = "ami-0fd05997b4dff7aac"  
+  instance_type = "t2.micro"
+  security_groups = [aws_security_group.allow_web.name]
+  
   tags = {
     Name = "WebServer"
   }
+
+  # Ansible remote-exec provisioner to install Nginx
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y nginx",
+      "sudo systemctl start nginx",
+      "sudo systemctl enable nginx"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"  # Update with the correct username (e.g., ubuntu, ec2-user)
+      private_key = file("~/.ssh/id_rsa")  # Update with the path to your private key
+      host        = self.public_ip
+    }
+  }
 }
 
-# Output the Public IP of the Instance
-output "instance_ip" {
+output "instance_public_ip" {
   value = aws_instance.web_server.public_ip
 }
