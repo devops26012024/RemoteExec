@@ -68,6 +68,19 @@ resource "aws_instance" "web_server" {
     ]
   }
 
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update -y",
+      "sudo apt install nginx -y"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      private_key = tls_private_key.key_pair.private_key_pem
+      host        = aws_instance.web_server.public_ip
+    }
+  }
+
   tags = {
     Name = "WebServer"
   }
