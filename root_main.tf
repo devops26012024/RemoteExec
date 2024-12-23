@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "ap-south-1"
+  region = var.aws_region
 }
 
 # Generate SSH Key Pair using Terraform (TLS provider)
@@ -42,8 +42,8 @@ resource "aws_security_group" "web_sg" {
 
 # EC2 Instance
 resource "aws_instance" "web_server" {
-  ami           = "ami-053b12d3152c0cc71" # Amazon Linux 2 AMI
-  instance_type = "t2.micro"
+  ami           = var.aws_ami
+  instance_type = var.instance_type
   key_name      = aws_key_pair.key.key_name
 
   security_groups = [
