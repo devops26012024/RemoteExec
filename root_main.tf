@@ -1,10 +1,30 @@
+# Provider Configuration
 provider "aws" {
-  region = "ap-south-1"
+  region = var.aws_region
 }
 
-# Create a security group
-resource "aws_security_group" "allow_web" {
-  name_prefix = "allow_web"
+# Generate SSH Key Pair using Terraform (TLS provider)
+resource "tls_private_key" "key_pair" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+# Create an AWS EC2 Key Pair
+resource "aws_key_pair" "key" {
+  key_name   = "webserver-key"
+  public_key = tls_private_key.key_pair.public_key_openssh
+}
+
+# Security Group
+resource "aws_security_group" "web_sg" {
+  name_prefix = "web-sg-"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # For testing; restrict to your IP for production.
+  }
 
   ingress {
     from_port   = 80
@@ -21,34 +41,39 @@ resource "aws_security_group" "allow_web" {
   }
 }
 
-# Provision an EC2 instance
+# EC2 Instance
 resource "aws_instance" "web_server" {
-  ami           = "ami-0fd05997b4dff7aac"  
-  instance_type = "t2.micro"
-  security_groups = [aws_security_group.allow_web.name]
-  
-  tags = {
-    Name = "WebServer"
-  }
+  ami           = var.aws_ami
+  instance_type = var.instance_type
+  key_name      = aws_key_pair.key.key_name
 
-  # Ansible remote-exec provisioner to install Nginx
+  security_groups = [
+    aws_security_group.web_sg.name
+  ]
+
+  # Install and Configure Nginx
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y nginx",
+      "sudo yum update -y",
+      "sudo amazon-linux-extras enable nginx1",
+      "sudo yum install -y nginx",
       "sudo systemctl start nginx",
       "sudo systemctl enable nginx"
     ]
-
     connection {
       type        = "ssh"
-      user        = "ubuntu"  # Update with the correct username (e.g., ubuntu, ec2-user)
-      private_key = file("~/.ssh/id_rsa")  # Update with the path to your private key
+      user        = "ec2-user"
+      private_key = tls_private_key.key_pair.private_key_pem
       host        = self.public_ip
     }
   }
+
+  tags = {
+    Name = "WebServer"
+  }
 }
 
-output "instance_public_ip" {
+# Output the Public IP of the Instance
+output "instance_ip" {
   value = aws_instance.web_server.public_ip
 }
