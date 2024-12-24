@@ -1,8 +1,8 @@
 resource "aws_instance" "web" {
 
-  ami                    = "ami-022ce6f32988af5fa"
+  ami                    = "ami-053b12d3152c0cc71"
   instance_type          = "t2.micro"
-  key_name               = "DevOps"
+  key_name               = "guru"
   vpc_security_group_ids = [aws_security_group.websg.id]
 
   tags = {
@@ -16,12 +16,14 @@ resource "aws_instance" "web" {
       type        = "ssh"
       user        = "ec2-user"
       host        = self.public_ip
-      private_key = file("/Users/balajireddylachhannagari/Downloads/DevOps.pem")
+      private_key = file("/Users/pradeepkumar.dodda/Downloads/guru.pem")
     }
-    inline = ["sudo yum install httpd -y",
-      "sudo systemctl start httpd",
-      "sudo systemctl enable httpd",
-      "sudo chmod 777 -R /var/www"
+    inline = [
+      "sudo yum update -y",
+      "sudo amazon-linux-extras enable nginx1",
+      "sudo yum install -y nginx",
+      "sudo systemctl start nginx",
+      "sudo systemctl enable nginx"
     ]
     on_failure = continue
   }
