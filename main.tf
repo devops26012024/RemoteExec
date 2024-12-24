@@ -47,7 +47,7 @@ resource "aws_instance" "web_server" {
   provisioner "remote-exec" {
     connection {
       type        = "ssh"
-      user        = "ec2-user"
+      user        = "ubuntu"
       host        = self.public_ip
       private_key = file("C:/Users/pradeepkumar.dodda/Downloads/guru.pem")
     }
