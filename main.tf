@@ -1,33 +1,5 @@
-resource "aws_instance" "web" {
-
-  ami                    = "ami-053b12d3152c0cc71"
-  instance_type          = "t2.micro"
-  key_name               = "guru"
-  vpc_security_group_ids = [aws_security_group.websg.id]
-
-  tags = {
-    "Name"      = "Web_Server"
-    "ManagedBy" = "IaC"
-  }
-
-
-  provisioner "remote-exec" {
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      host        = self.public_ip
-      private_key = file("/Users/pradeepkumar.dodda/Downloads/guru.pem")
-    }
-    inline = [
-      "sudo yum update -y",
-      "sudo amazon-linux-extras enable nginx1",
-      "sudo yum install -y nginx",
-      "sudo systemctl start nginx",
-      "sudo systemctl enable nginx"
-    ]
-    on_failure = continue
-  }
-
+provider "aws" {
+  region = var.aws_region
 }
 
 resource "aws_security_group" "websg" {
@@ -57,3 +29,38 @@ resource "aws_security_group" "websg" {
     description = "Allow all out bound ports to all destinations"
   }
 }
+
+# EC2 Instance
+resource "aws_instance" "web_server" {
+  ami           = var.aws_ami
+  instance_type = var.instance_type
+  key_name      = "guru"
+
+  security_groups = [ aws_security_group.web_sg.name ]
+
+  tags = {
+    "Name"      = "Web_Server"
+    "ManagedBy" = "IaC"
+  }
+
+
+  provisioner "remote-exec" {
+    connection {
+      type        = "ssh"
+      user        = "ec2-user"
+      host        = self.public_ip
+      private_key = file("C:/Users/pradeepkumar.dodda/Downloads/guru.pem")
+    }
+
+    inline = [
+      "sudo yum update -y",
+      "sudo amazon-linux-extras enable nginx1",
+      "sudo yum install -y nginx",
+      "sudo systemctl start nginx",
+      "sudo systemctl enable nginx"
+    ]
+    on_failure = continue
+  }
+
+}
+
