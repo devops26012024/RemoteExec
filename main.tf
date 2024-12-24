@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_security_group" "websg" {
-  name        = "webserver-sg"
+  name        = "web-sg"
   description = "Web Server SG allow SSH & HTTP Ports"
 
 
@@ -49,7 +49,7 @@ resource "aws_instance" "web_server" {
       type        = "ssh"
       user        = "ubuntu"
       host        = self.public_ip
-      private_key = file("C:/Users/pradeepkumar.dodda/Downloads/guru.pem")
+      private_key = file("./guru.pem")
     }
 
     inline = [
