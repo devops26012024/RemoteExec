@@ -44,7 +44,7 @@ resource "aws_instance" "web_server" {
   }
 
 
-  provisioner "remote-exec" {
+  provisioner "local-exec" {
     connection {
       type        = "ssh"
       user        = "ec2-user"
