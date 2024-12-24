@@ -1,3 +1,4 @@
+/* 
 # Provider Configuration
 provider "aws" {
   region = var.aws_region
@@ -77,3 +78,4 @@ resource "aws_instance" "web_server" {
 output "instance_ip" {
   value = aws_instance.web_server.public_ip
 }
+*/
