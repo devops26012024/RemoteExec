@@ -11,7 +11,7 @@ data "aws_secretsmanager_secret_version" "example" {
 }
 
 output "retrieved_secret" {
-  value = data.aws_secretsmanager_secret_version.example.secret_string
+  value = prod/db/credentials
   sensitive = true
 }
 
