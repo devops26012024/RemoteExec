@@ -2,7 +2,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "aws_security_group" "websg" {
+resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Web Server SG allow SSH & HTTP Ports"
 
