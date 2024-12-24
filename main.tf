@@ -2,6 +2,19 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_secretsmanager_secret" "example" {
+  name = var.secret_name
+}
+
+data "aws_secretsmanager_secret_version" "example" {
+  secret_id = data.aws_secretsmanager_secret.example.id
+}
+
+output "retrieved_secret" {
+  value = data.aws_secretsmanager_secret_version.example.secret_string
+  sensitive = true
+}
+
 resource "aws_security_group" "web_sg" {
   name        = "web-sg"
   description = "Web Server SG allow SSH & HTTP Ports"
