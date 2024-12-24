@@ -9,3 +9,8 @@ variable "aws_ami" {
 variable "instance_type" {
   default = "t2.micro"
 }
+
+variable "secret_name" {
+  description = "The name of secret in AWS Secrets Manager"
+  type = string
+  }
