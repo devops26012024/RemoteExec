@@ -13,4 +13,5 @@ variable "instance_type" {
 variable "secret_name" {
   description = "The name of secret in AWS Secrets Manager"
   type = string
+  default = "prod/db/credentials"
   }
