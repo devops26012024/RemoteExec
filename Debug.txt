@@ -1,0 +1,116 @@
+
+1. Verify CNI plugin compatibility.
+
+kubectl describe nodes | grep -i cni
+
+2. Ensure NetworkPolicy definitions are correct.
+
+kubectl get networkpolicy -n <namespace>
+kubectl describe networkpolicy <policy-name> -n <namespace>
+
+
+3. Check Pod labels and selectors.
+
+Verify that the podSelector, policyTypes, and ingress/egress rules are correct.
+
+kubectl get pods --show-labels -n <namespace>
+
+Ensure the labels in the podSelector of the NetworkPolicy match the actual Pod labels.
+
+4. Test Pod Connectivity Without NetworkPolicies
+
+Reason: The issue might not be related to NetworkPolicies but to other networking problems.
+
+Action:
+
+Temporarily remove all NetworkPolicies in the namespace:
+
+kubectl delete networkpolicy --all -n <namespace>
+
+Test communication between Pods:
+
+kubectl exec -it <pod-name> -- ping <destination-pod-ip>
+
+If connectivity works after removing NetworkPolicies, the issue lies in the policies themselves.
+
+
+
+
+---
+
+5. Verify Pod IPs and DNS Resolution
+
+Reason: Pods might be trying to communicate with incorrect IPs or DNS names.
+
+Action:
+
+Get the Pod IPs:
+
+kubectl get pods -o wide -n <namespace>
+
+Test direct communication using IP:
+
+kubectl exec -it <pod-name> -- ping <destination-pod-ip>
+
+Test DNS resolution:
+
+kubectl exec -it <pod-name> -- nslookup <destination-service>
+
+
+
+
+---
+
+6. Verify Traffic Flow with Tools
+
+Reason: Tools like tcpdump and curl can help diagnose connectivity issues.
+
+Action:
+
+Install curl or netcat in the Pod (if not available):
+
+kubectl exec -it <pod-name> -- apk add curl
+
+Test specific ports using curl or nc:
+
+kubectl exec -it <pod-name> -- curl <destination-ip>:<port>
+kubectl exec -it <pod-name> -- nc -zv <destination-ip> <port>
+
+Capture traffic with tcpdump (if supported by the CNI plugin).
+
+
+
+
+---
+
+7. Examine Node-Level Networking
+
+Reason: Issues with node networking (e.g., iptables, routes) can prevent communication.
+
+Action:
+
+Check the routes on the node:
+
+ip route
+
+Inspect iptables rules:
+
+iptables -L -v -n
+
+Restart the kubelet and network plugin on the node if necessary.
+
+
+
+
+---
+
+8. Debug NetworkPolicy with kubectl
+
+Reason: Kubernetes provides a way to test permissions based on NetworkPolicies.
+
+Action:
+
+Use the following to test permissions:
+
+kubectl auth can-i get pods --as=<serviceaccount> -n <namespace>
+
