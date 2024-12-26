@@ -1,3 +1,106 @@
+
+The following manifest creates a ClusterRoleBinding that assigns the admin ClusterRole to the user john_doe at the cluster level.
+
+
+---
+
+YAML Manifest
+
+Save this as admin-clusterrolebinding.yaml:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-binding-john-doe
+subjects:
+- kind: User
+  name: john_doe
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
+
+
+---
+
+Explanation of the YAML Manifest
+
+1. kind: ClusterRoleBinding:
+
+Grants cluster-wide permissions to the specified user.
+
+
+
+2. metadata.name:
+
+Unique name for the ClusterRoleBinding, in this case, admin-binding-john-doe.
+
+
+
+3. subjects:
+
+kind: User: Specifies the type of subject (e.g., User for users, Group for groups).
+
+name: john_doe: The username to bind the ClusterRole to.
+
+
+
+4. roleRef:
+
+kind: ClusterRole: Refers to the admin ClusterRole.
+
+name: admin: The name of the ClusterRole being assigned.
+
+
+
+
+
+---
+
+Steps to Apply the ClusterRoleBinding
+
+1. Save the manifest to a file:
+
+vi admin-clusterrolebinding.yaml
+
+
+2. Apply the ClusterRoleBinding:
+
+kubectl apply -f admin-clusterrolebinding.yaml
+
+
+3. Verify the ClusterRoleBinding is created:
+
+kubectl get clusterrolebinding admin-binding-john-doe
+
+
+4. Describe the ClusterRoleBinding:
+
+kubectl describe clusterrolebinding admin-binding-john-doe
+
+
+
+
+---
+
+Testing the Permissions
+
+Switch to john_doe's Context
+
+Use the kubeconfig file for john_doe (if configured) to test access.
+
+Test Full Cluster Access
+
+Run the following commands:
+
+kubectl --kubeconfig=john_doe.kubeconfig get pods --all-namespaces
+kubectl --kubeconfig=john_doe.kubeconfig create namespace test-namespace
+kubectl --kubeconfig=john_doe.kubeconfig delete namespace test-namespace
+
+If the admin ClusterRole is correctly bound, john_doe should be able to perform any operation across all namespaces.
+
+
 Step 2: Sign the CSR with Kubernetes' CA
 
 # Sign the CSR with the cluster's CA
