@@ -1,4 +1,132 @@
 
+YAML Manifest for the ClusterRole
+
+Save this as admin-clusterrole.yaml:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: admin
+rules:
+- apiGroups: ["*"] # Includes all API groups
+  resources: ["*"] # Includes all resource types
+  verbs: ["*"]     # Grants all possible actions (create, delete, update, list, etc.)
+
+
+---
+
+Explanation of the YAML Manifest
+
+1. kind: ClusterRole:
+
+Grants permissions at the cluster level (not namespace-specific).
+
+
+
+2. apiGroups:
+
+["*"] includes all API groups, covering both core resources (e.g., Pods, Services) and custom resources.
+
+
+
+3. resources:
+
+["*"] allows access to all resources (e.g., Pods, ConfigMaps, Deployments).
+
+
+
+4. verbs:
+
+["*"] permits all actions (e.g., get, list, create, update, delete).
+
+
+
+
+
+---
+
+Apply the ClusterRole
+
+1. Save the manifest to a file:
+
+vi admin-clusterrole.yaml
+
+
+2. Apply it to the cluster:
+
+kubectl apply -f admin-clusterrole.yaml
+
+
+3. Verify the ClusterRole is created:
+
+kubectl get clusterrole admin
+
+
+4. Describe the ClusterRole:
+
+kubectl describe clusterrole admin
+
+
+
+
+---
+
+Optional: Bind the ClusterRole to a User
+
+To assign the admin ClusterRole to a user, create a ClusterRoleBinding.
+
+YAML Manifest for ClusterRoleBinding
+
+Save the following as admin-clusterrolebinding.yaml:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-binding
+subjects:
+- kind: User
+  name: <username> # Replace with the actual username
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: admin
+  apiGroup: rbac.authorization.k8s.io
+
+Apply the ClusterRoleBinding
+
+1. Save the manifest:
+
+vi admin-clusterrolebinding.yaml
+
+
+2. Apply it to the cluster:
+
+kubectl apply -f admin-clusterrolebinding.yaml
+
+
+3. Verify the ClusterRoleBinding:
+
+kubectl get clusterrolebinding admin-binding
+kubectl describe clusterrolebinding admin-binding
+
+
+
+
+---
+
+Test the Permissions
+
+1. Use the assigned user's kubeconfig to test the permissions:
+
+kubectl --kubeconfig=<user-kubeconfig> get all --all-namespaces
+kubectl --kubeconfig=<user-kubeconfig> create namespace test-namespace
+
+
+2. Ensure the user can perform any action on any resource.
+
+
+
+
 The following manifest creates a ClusterRoleBinding that assigns the admin ClusterRole to the user john_doe at the cluster level.
 
 
