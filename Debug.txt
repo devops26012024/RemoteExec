@@ -1,3 +1,118 @@
+Step 2: Sign the CSR with Kubernetes' CA
+
+# Sign the CSR with the cluster's CA
+openssl x509 -req -in jane_doe.csr \
+  -CA /etc/kubernetes/pki/ca.crt \
+  -CAkey /etc/kubernetes/pki/ca.key \
+  -CAcreateserial \
+  -out jane_doe.crt \
+  -days 365
+
+This generates the signed certificate jane_doe.crt.
+
+
+---
+
+Step 3: Create a Kubeconfig File for jane_doe
+
+Create a jane_doe.kubeconfig file:
+
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    certificate-authority: /etc/kubernetes/pki/ca.crt
+    server: https://<cluster-api-server>:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    user: jane_doe
+  name: jane_doe-context
+current-context: jane_doe-context
+users:
+- name: jane_doe
+  user:
+    client-certificate: jane_doe.crt
+    client-key: jane_doe.key
+
+Save the file and distribute it to jane_doe.
+
+
+---
+
+Step 4: Create RBAC Role and RoleBinding
+
+Create a Role for Read-Only Access
+
+Save the following as read-only-role.yaml:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: read-only
+  namespace: development
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+Apply the Role:
+
+kubectl apply -f read-only-role.yaml
+
+Create a RoleBinding for jane_doe
+
+Save the following as read-only-rolebinding.yaml:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-only-binding
+  namespace: development
+subjects:
+- kind: User
+  name: jane_doe
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: read-only
+  apiGroup: rbac.authorization.k8s.io
+
+Apply the RoleBinding:
+
+kubectl apply -f read-only-rolebinding.yaml
+
+
+---
+
+Step 5: Verify the Binding
+
+Switch to jane_doe's Kubeconfig
+
+Test access using jane_doe's kubeconfig:
+
+kubectl --kubeconfig=jane_doe.kubeconfig get pods -n development
+
+If successful, you’ll see the list of Pods in the development namespace.
+
+Any other actions (e.g., creating Pods) will be denied due to the Role's restrictions.
+
+
+Check the RoleBinding
+
+Verify that the RoleBinding is in place:
+
+kubectl get rolebinding -n development
+kubectl describe rolebinding read-only-binding -n development
+
+Simulate Other Actions
+
+Try an unauthorized action to confirm the Role's restrictions:
+
+kubectl --kubeconfig=jane_doe.kubeconfig create pod mypod -n development
+
+This should return a permission error, confirming the RoleBinding is working correctly.
 
 1. Verify CNI plugin compatibility.
 
